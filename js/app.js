@@ -325,58 +325,58 @@ function loadUserData() {
 
 function updateDashboard() {
     const filterVal = filterMonth.value;
-    const now = new Date();
-    const currentMonth = now.getMonth();
-    const currentYear = now.getFullYear();
 
     let totalIncomeAllTime = 0;
     let totalExpenseAllTime = 0;
     let totalZakatAllTime = 0;
 
-    let incomeLastMonthEnd = 0;
-    let expenseLastMonthEnd = 0;
-    let zakatLastMonthEnd = 0;
+    let incomeBeforeFilter = 0;
+    let expenseBeforeFilter = 0;
+    let zakatBeforeFilter = 0;
 
     let monthlyExpenses = 0;
 
     transactions.forEach(tx => {
-        const txDate = new Date(tx.date);
-        const txMonth = txDate.getMonth();
-        const txYear = txDate.getFullYear();
+        const txMonthStr = tx.date.substring(0, 7); // "YYYY-MM"
 
-        // All Time
+        // All Time totals (for current balance)
         if (tx.type === 'income') totalIncomeAllTime += tx.amount;
         if (tx.type === 'expense') totalExpenseAllTime += tx.amount;
         if (tx.type === 'zakat') totalZakatAllTime += tx.amount;
 
-        // Last Month End Computation
-        if (txYear < currentYear || (txYear === currentYear && txMonth < currentMonth)) {
-            if (tx.type === 'income') incomeLastMonthEnd += tx.amount;
-            if (tx.type === 'expense') expenseLastMonthEnd += tx.amount;
-            if (tx.type === 'zakat') zakatLastMonthEnd += tx.amount;
+        // Transactions strictly BEFORE the selected month (for last month ending balance)
+        if (filterVal !== 'all' && txMonthStr < filterVal) {
+            if (tx.type === 'income') incomeBeforeFilter += tx.amount;
+            if (tx.type === 'expense') expenseBeforeFilter += tx.amount;
+            if (tx.type === 'zakat') zakatBeforeFilter += tx.amount;
         }
 
-        // Selected Month Expenses
-        if (filterVal !== 'all') {
-            const txMonthStr = tx.date.substring(0, 7);
-            if (txMonthStr === filterVal && tx.type === 'expense') {
-                monthlyExpenses += tx.amount;
-            }
+        // Selected month expenses
+        if (filterVal !== 'all' && txMonthStr === filterVal && tx.type === 'expense') {
+            monthlyExpenses += tx.amount;
         }
     });
 
     const currentBalance = totalIncomeAllTime - totalExpenseAllTime - totalZakatAllTime;
-    const lastMonthBalance = incomeLastMonthEnd - expenseLastMonthEnd - zakatLastMonthEnd;
+    const lastMonthEndingBalance = incomeBeforeFilter - expenseBeforeFilter - zakatBeforeFilter;
 
     currentBalanceEl.innerText = `Rs. ${formatAmount(currentBalance)}`;
-    lastMonthBalanceEl.innerText = `Rs. ${formatAmount(lastMonthBalance)}`;
-    
+
+    // Last Month Ending Balance: only meaningful when a month is selected
+    if (filterVal === 'all') {
+        lastMonthBalanceEl.innerText = `Rs. 0.00`;
+    } else {
+        lastMonthBalanceEl.innerText = `Rs. ${formatAmount(lastMonthEndingBalance)}`;
+    }
+
+    // Monthly Expenses: only meaningful when a month is selected
     if (filterVal === 'all') {
         monthlyExpensesEl.innerText = `Rs. 0.00`;
     } else {
         monthlyExpensesEl.innerText = `Rs. ${formatAmount(monthlyExpenses)}`;
     }
 }
+
 
 // --- Transaction Modal Logic ---
 function openTxModal(tx) {
