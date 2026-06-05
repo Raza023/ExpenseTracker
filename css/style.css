@@ -9,7 +9,7 @@
     --danger: #ef4444;
     --success: #22c55e;
     --warning: #eab308;
-    --zakat: #10b981;
+    --zakat: #eab308;
     
     --grad-blue: linear-gradient(135deg, #3b82f6, #2563eb);
     --grad-purple: linear-gradient(135deg, #8b5cf6, #6d28d9);
@@ -336,6 +336,7 @@ body {
 .tx-tab[data-type="zakat"].active {
     background: var(--zakat);
     border-color: var(--zakat);
+    color: #000;
 }
 
 .tx-tab[data-type="income"].active {
@@ -406,7 +407,7 @@ tr:hover td {
 }
 
 .type-expense { background: rgba(239, 68, 68, 0.2); color: #fca5a5; }
-.type-zakat { background: rgba(16, 185, 129, 0.2); color: #6ee7b7; }
+.type-zakat { background: rgba(234, 179, 8, 0.2); color: #fde047; }
 .type-income { background: rgba(34, 197, 94, 0.2); color: #86efac; }
 
 /* Modal */
