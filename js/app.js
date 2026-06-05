@@ -29,6 +29,7 @@ const userEmailDisplay = document.getElementById('user-email');
 const currentBalanceEl = document.getElementById('current-balance');
 const lastMonthBalanceEl = document.getElementById('last-month-balance');
 const monthlyExpensesEl = document.getElementById('monthly-expenses');
+const thisMonthBalanceEl = document.getElementById('this-month-balance');
 const monthlySalaryDisplay = document.getElementById('monthly-salary-display');
 
 // Transaction Form Elements
@@ -49,6 +50,7 @@ const editSalaryBtn = document.getElementById('edit-salary-btn');
 const closeSalaryModal = document.getElementById('close-salary-modal');
 const salaryForm = document.getElementById('salary-form');
 const salaryInput = document.getElementById('salary-input');
+const salaryMonthInput = document.getElementById('salary-month-input');
 
 const txModal = document.getElementById('tx-modal');
 const closeTxModal = document.getElementById('close-tx-modal');
@@ -72,7 +74,7 @@ const editTxWhere = document.getElementById('edit-tx-where');
 let currentUser = null;
 let isLoginMode = true;
 let transactions = [];
-let userProfile = { monthlySalary: 0 };
+let monthlySalaries = {}; // { "YYYY-MM": amount }
 let dbListeners = [];
 
 // --- Utilities ---
@@ -106,6 +108,20 @@ function init() {
         altInput: true,
         altFormat: "d-M-Y",
         dateFormat: "Y-m-d"
+    });
+    flatpickr("#salary-month-input", {
+        plugins: [
+            new monthSelectPlugin({
+                shorthand: true,
+                dateFormat: "Y-m",
+                altFormat: "M Y",
+                theme: "dark"
+            })
+        ],
+        altInput: true,
+        onChange: function(selectedDates, dateStr) {
+            salaryInput.value = monthlySalaries[dateStr] || '';
+        }
     });
     
     // Check if user is saved in session storage
@@ -272,7 +288,18 @@ transactionForm.addEventListener('submit', async (e) => {
 
 // --- Salary Modal Logic ---
 editSalaryBtn.addEventListener('click', () => {
-    salaryInput.value = userProfile.monthlySalary || '';
+    const filterVal = filterMonth.value;
+    let targetMonth;
+    
+    if (filterVal !== 'all') {
+        targetMonth = filterVal;
+    } else {
+        const now = new Date();
+        targetMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+    }
+    
+    document.querySelector("#salary-month-input")._flatpickr.setDate(targetMonth, true); // true triggers onChange
+    
     salaryModal.classList.add('active');
 });
 
@@ -284,10 +311,14 @@ salaryForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     if (!currentUser) return;
 
+    const selectedMonth = salaryMonthInput.value; // "YYYY-MM"
     const newSalary = parseFloat(salaryInput.value);
+    if (!selectedMonth) {
+        alert("Please select a month.");
+        return;
+    }
     try {
-        const profileRef = ref(db, `users/${currentUser.uid}/profile`);
-        await set(profileRef, { monthlySalary: newSalary });
+        await set(ref(db, `users/${currentUser.uid}/salaries/${selectedMonth}`), newSalary);
         salaryModal.classList.remove('active');
     } catch (error) {
         alert("Error updating salary: " + error.message);
@@ -298,14 +329,13 @@ salaryForm.addEventListener('submit', async (e) => {
 function loadUserData() {
     if (!currentUser) return;
 
-    const profileRef = ref(db, `users/${currentUser.uid}/profile`);
-    onValue(profileRef, (snapshot) => {
+    // Load per-month salaries
+    const salariesRef = ref(db, `users/${currentUser.uid}/salaries`);
+    onValue(salariesRef, (snapshot) => {
+        monthlySalaries = {};
         if (snapshot.exists()) {
-            userProfile = snapshot.val();
-        } else {
-            userProfile = { monthlySalary: 0 };
+            monthlySalaries = snapshot.val();
         }
-        monthlySalaryDisplay.innerText = `Rs. ${formatAmount(userProfile.monthlySalary || 0)}`;
         updateDashboard();
     });
 
@@ -334,6 +364,10 @@ function updateDashboard() {
     let expenseBeforeFilter = 0;
     let zakatBeforeFilter = 0;
 
+    let incomeThisMonth = 0;
+    let expenseThisMonth = 0;
+    let zakatThisMonth = 0;
+
     let monthlyExpenses = 0;
 
     transactions.forEach(tx => {
@@ -352,13 +386,17 @@ function updateDashboard() {
         }
 
         // Selected month expenses
-        if (filterVal !== 'all' && txMonthStr === filterVal && tx.type === 'expense') {
-            monthlyExpenses += tx.amount;
+        if (filterVal !== 'all' && txMonthStr === filterVal) {
+            if (tx.type === 'expense') monthlyExpenses += tx.amount;
+            if (tx.type === 'income') incomeThisMonth += tx.amount;
+            if (tx.type === 'expense') expenseThisMonth += tx.amount;
+            if (tx.type === 'zakat') zakatThisMonth += tx.amount;
         }
     });
 
     const currentBalance = totalIncomeAllTime - totalExpenseAllTime - totalZakatAllTime;
     const lastMonthEndingBalance = incomeBeforeFilter - expenseBeforeFilter - zakatBeforeFilter;
+    const thisMonthEndingBalance = lastMonthEndingBalance + incomeThisMonth - expenseThisMonth - zakatThisMonth;
 
     currentBalanceEl.innerText = `Rs. ${formatAmount(currentBalance)}`;
 
@@ -374,6 +412,23 @@ function updateDashboard() {
         monthlyExpensesEl.innerText = `Rs. 0.00`;
     } else {
         monthlyExpensesEl.innerText = `Rs. ${formatAmount(monthlyExpenses)}`;
+    }
+
+    // This Month Ending Balance: balance at end of selected month
+    if (filterVal === 'all') {
+        thisMonthBalanceEl.innerText = `Rs. 0.00`;
+    } else {
+        thisMonthBalanceEl.innerText = `Rs. ${formatAmount(thisMonthEndingBalance)}`;
+    }
+
+    // Monthly Salary: show salary for selected month, or highest ever for "All Time"
+    if (filterVal === 'all') {
+        const allSalaries = Object.values(monthlySalaries);
+        const highest = allSalaries.length > 0 ? Math.max(...allSalaries) : 0;
+        monthlySalaryDisplay.innerText = `Rs. ${formatAmount(highest)}`;
+    } else {
+        const salary = monthlySalaries[filterVal] || 0;
+        monthlySalaryDisplay.innerText = `Rs. ${formatAmount(salary)}`;
     }
 }
 

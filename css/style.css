@@ -130,6 +130,10 @@ body {
     box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
 }
 
+.input-group input[type="month"] {
+    color-scheme: dark;
+}
+
 .error-msg {
     color: var(--danger);
     font-size: 0.875rem;
@@ -252,6 +256,7 @@ body {
 .stat-card.gradient-purple::before { background: var(--grad-purple); }
 .stat-card.gradient-red::before { background: var(--grad-red); }
 .stat-card.gradient-green::before { background: var(--grad-green); }
+.stat-card.gradient-orange::before { background: linear-gradient(135deg, #f97316, #ea580c); }
 
 .stat-icon {
     width: 50px;
