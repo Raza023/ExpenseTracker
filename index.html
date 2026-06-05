@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Expense Tracker Pro</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Flatpickr Datepicker -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <link rel="stylesheet" type="text/css" href="https://npmcdn.com/flatpickr/dist/themes/dark.css">
+</head>
+<body>
+    <div id="app">
+        <!-- Auth View -->
+        <div id="auth-view" class="view active">
+            <div class="auth-container glass-panel">
+                <div class="auth-header">
+                    <h2><i class="fa-solid fa-wallet"></i> ExpensePro</h2>
+                    <p>Manage your finances intelligently.</p>
+                </div>
+                
+                <div class="auth-tabs">
+                    <button class="tab-btn active" id="tab-login">Login</button>
+                    <button class="tab-btn" id="tab-signup">Sign Up</button>
+                </div>
+
+                <form id="auth-form">
+                    <div class="input-group">
+                        <i class="fa-solid fa-envelope"></i>
+                        <input type="email" id="auth-email" placeholder="Email Address" required>
+                    </div>
+                    <div class="input-group">
+                        <i class="fa-solid fa-lock"></i>
+                        <input type="password" id="auth-password" placeholder="Password" required>
+                    </div>
+                    <div id="auth-error" class="error-msg"></div>
+                    <button type="submit" class="btn btn-primary" id="auth-submit">Login</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Dashboard View -->
+        <div id="dashboard-view" class="view">
+            <nav class="navbar glass-panel">
+                <div class="nav-brand">
+                    <h2><i class="fa-solid fa-wallet"></i> ExpensePro</h2>
+                </div>
+                <div class="nav-user">
+                    <span id="user-email">user@example.com</span>
+                    <button id="logout-btn" class="btn btn-outline"><i class="fa-solid fa-sign-out-alt"></i> Logout</button>
+                </div>
+            </nav>
+
+            <main class="dashboard-content">
+                <!-- Top Stats Cards -->
+                <div class="stats-grid">
+                    <div class="stat-card glass-panel gradient-blue">
+                        <div class="stat-icon"><i class="fa-solid fa-scale-balanced"></i></div>
+                        <div class="stat-info">
+                            <h3>Current Balance</h3>
+                            <h2 id="current-balance">Rs. 0.00</h2>
+                        </div>
+                    </div>
+                    <div class="stat-card glass-panel gradient-purple">
+                        <div class="stat-icon"><i class="fa-solid fa-clock-rotate-left"></i></div>
+                        <div class="stat-info">
+                            <h3>Last Month Ending</h3>
+                            <h2 id="last-month-balance">Rs. 0.00</h2>
+                        </div>
+                    </div>
+                    <div class="stat-card glass-panel gradient-red">
+                        <div class="stat-icon"><i class="fa-solid fa-money-bill-trend-up"></i></div>
+                        <div class="stat-info">
+                            <h3>Monthly Expenses</h3>
+                            <h2 id="monthly-expenses">Rs. 0.00</h2>
+                        </div>
+                    </div>
+                    <div class="stat-card glass-panel gradient-green">
+                        <div class="stat-icon"><i class="fa-solid fa-hand-holding-dollar"></i></div>
+                        <div class="stat-info">
+                            <h3>Monthly Salary</h3>
+                            <h2 id="monthly-salary-display">Rs. 0.00</h2>
+                            <button id="edit-salary-btn" class="btn-icon"><i class="fa-solid fa-pen"></i></button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="main-grid">
+                    <!-- Actions Panel -->
+                    <div class="actions-panel glass-panel">
+                        <h3><i class="fa-solid fa-plus-circle"></i> Add Transaction</h3>
+                        <div class="transaction-tabs">
+                            <button class="tx-tab active" data-type="expense">Expense</button>
+                            <button class="tx-tab" data-type="zakat">Zakat/Obligatory</button>
+                            <button class="tx-tab" data-type="income">Income</button>
+                        </div>
+                        
+                        <form id="transaction-form">
+                            <input type="hidden" id="tx-type" value="expense">
+                            <div class="input-group">
+                                <i class="fa-solid fa-rupee-sign"></i>
+                                <input type="number" id="tx-amount" placeholder="Amount" step="0.01" required>
+                            </div>
+                            <div class="input-group">
+                                <i class="fa-solid fa-calendar"></i>
+                                <input type="date" id="tx-date" required>
+                            </div>
+                            <div class="input-group">
+                                <i class="fa-solid fa-tag"></i>
+                                <input type="text" id="tx-where" placeholder="Where did you spend? (e.g. Groceries)" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary w-100">Add Transaction</button>
+                        </form>
+                    </div>
+
+                    <!-- Transactions Table -->
+                    <div class="table-panel glass-panel">
+                        <div class="table-header">
+                            <h3><i class="fa-solid fa-list-ul"></i> Recent Transactions</h3>
+                            <div class="table-filters">
+                                <select id="filter-month" class="glass-input">
+                                    <option value="all">All Time</option>
+                                    <!-- Options populated by JS -->
+                                </select>
+                            </div>
+                        </div>
+                        <div class="table-responsive">
+                            <table id="transactions-table">
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Description</th>
+                                        <th>Type</th>
+                                        <th>Amount</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="transactions-body">
+                                    <!-- Filled by JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Salary Modal -->
+    <div id="salary-modal" class="modal">
+        <div class="modal-content glass-panel">
+            <h3>Set Monthly Salary</h3>
+            <p>This helps in tracking your baseline income.</p>
+            <form id="salary-form">
+                <div class="input-group">
+                    <i class="fa-solid fa-sack-dollar"></i>
+                    <input type="number" id="salary-input" placeholder="Monthly Salary Amount" step="0.01" required>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" id="close-salary-modal" class="btn btn-outline">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Transaction Modal -->
+    <div id="tx-modal" class="modal">
+        <div class="modal-content glass-panel" style="max-width: 500px;">
+            <div class="tx-modal-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h3><i class="fa-solid fa-receipt"></i> Transaction Details</h3>
+                <button type="button" id="close-tx-modal" class="btn-icon" style="font-size: 1.5rem;"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            
+            <!-- View Mode -->
+            <div id="tx-view-mode">
+                <div class="tx-detail-row">
+                    <span class="tx-label">Amount:</span>
+                    <span class="tx-value" id="tx-view-amount">Rs. 0.00</span>
+                </div>
+                <div class="tx-detail-row">
+                    <span class="tx-label">Date:</span>
+                    <span class="tx-value" id="tx-view-date">2023-01-01</span>
+                </div>
+                <div class="tx-detail-row">
+                    <span class="tx-label">Type:</span>
+                    <span class="tx-value" id="tx-view-type">Expense</span>
+                </div>
+                <div class="tx-detail-row">
+                    <span class="tx-label">Description:</span>
+                    <span class="tx-value" id="tx-view-where">Groceries</span>
+                </div>
+                
+                <div class="modal-actions" style="margin-top: 30px;">
+                    <button type="button" id="btn-edit-tx" class="btn btn-primary"><i class="fa-solid fa-pen"></i> Edit</button>
+                    <button type="button" id="btn-delete-tx" class="btn btn-outline" style="color: var(--danger); border-color: rgba(239, 68, 68, 0.3);"><i class="fa-solid fa-trash"></i> Delete</button>
+                </div>
+            </div>
+
+            <!-- Edit Mode -->
+            <div id="tx-edit-mode" style="display: none;">
+                <form id="tx-edit-form">
+                    <input type="hidden" id="edit-tx-id">
+                    <div class="input-group">
+                        <i class="fa-solid fa-layer-group"></i>
+                        <select id="edit-tx-type" class="glass-input" style="width: 100%; padding: 14px 14px 14px 45px; -webkit-appearance: none; appearance: none;">
+                            <option value="expense">Expense</option>
+                            <option value="zakat">Zakat/Obligatory</option>
+                            <option value="income">Income</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <i class="fa-solid fa-dollar-sign"></i>
+                        <input type="number" id="edit-tx-amount" step="0.01" required>
+                    </div>
+                    <div class="input-group">
+                        <i class="fa-solid fa-calendar"></i>
+                        <input type="date" id="edit-tx-date" required>
+                    </div>
+                    <div class="input-group">
+                        <i class="fa-solid fa-tag"></i>
+                        <input type="text" id="edit-tx-where" required>
+                    </div>
+                    <div class="modal-actions">
+                        <button type="button" id="btn-cancel-edit-tx" class="btn btn-outline">Cancel</button>
+                        <button type="submit" class="btn btn-primary"><i class="fa-solid fa-check"></i> Save Changes</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Flatpickr JS -->
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    
+    <!-- Firebase SDKs (Modular) -->
+    <script type="module" src="js/firebase-config.js"></script>
+    <script type="module" src="js/app.js"></script>
+</body>
+</html>
