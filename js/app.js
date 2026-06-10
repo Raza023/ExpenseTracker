@@ -345,8 +345,15 @@ function loadUserData() {
         snapshot.forEach((childSnap) => {
             transactions.push({ id: childSnap.key, ...childSnap.val() });
         });
-        // Sort descending by timestamp (latest added on top)
-        transactions.sort((a, b) => b.timestamp - a.timestamp);
+        //Sort by date descending, then by timestamp descending
+        transactions.sort((a, b) => {
+            const dateA = new Date(a.date);
+            const dateB = new Date(b.date);
+            if (dateB - dateA !== 0) {
+                return dateB - dateA;
+            }
+            return b.timestamp - a.timestamp;
+        });
         updateDashboard();
         updateMonthFilterOptions();
         renderTable();
