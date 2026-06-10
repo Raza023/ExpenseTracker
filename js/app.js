@@ -345,8 +345,8 @@ function loadUserData() {
         snapshot.forEach((childSnap) => {
             transactions.push({ id: childSnap.key, ...childSnap.val() });
         });
-        // Sort descending by date
-        transactions.sort((a, b) => new Date(b.date) - new Date(a.date));
+        // Sort descending by timestamp (latest added on top)
+        transactions.sort((a, b) => b.timestamp - a.timestamp);
         updateDashboard();
         updateMonthFilterOptions();
         renderTable();
