@@ -136,11 +136,25 @@
                     <div class="table-panel glass-panel">
                         <div class="table-header">
                             <h3><i class="fa-solid fa-list-ul"></i> Recent Transactions</h3>
-                            <div class="table-filters">
+                            <div class="table-filters" style="display: flex; gap: 10px; align-items: center;">
                                 <select id="filter-month" class="glass-input">
                                     <option value="all">All Time</option>
                                     <!-- Options populated by JS -->
                                 </select>
+                                <button id="btn-download-csv" class="btn btn-outline" title="Download CSV">
+                                    <i class="fa-solid fa-file-csv"></i>
+                                </button>
+                                <button id="btn-download-pdf" class="btn btn-outline" title="Download PDF">
+                                    <i class="fa-solid fa-file-pdf"></i>
+                                </button>
+                                <div style="width: 1px; height: 30px; background: var(--text-secondary); opacity: 0.3; margin: 0 5px;"></div>
+                                <button id="btn-export-data" class="btn btn-outline" title="Export All Data (JSON)">
+                                    <i class="fa-solid fa-file-export"></i>
+                                </button>
+                                <button id="btn-import-data" class="btn btn-outline" title="Import Data (JSON)">
+                                    <i class="fa-solid fa-file-import"></i>
+                                </button>
+                                <input type="file" id="import-file-input" accept=".json" style="display: none;">
                             </div>
                         </div>
                         <div class="table-responsive">
@@ -263,6 +277,8 @@
     <!-- Flatpickr JS -->
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/plugins/monthSelect/index.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.1/jspdf.plugin.autotable.min.js"></script>
 
     <!-- Firebase SDKs (Modular) -->
     <script type="module" src="js/firebase-config.js"></script>
