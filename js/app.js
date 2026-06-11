@@ -481,7 +481,6 @@ btnCancelEditTx.addEventListener('click', () => {
 });
 
 btnDeleteTx.addEventListener('click', async () => {
-    if(!confirm("Are you sure you want to delete this transaction?")) return;
     const txId = editTxId.value;
     if(!txId || !currentUser) return;
     try {
@@ -538,11 +537,11 @@ function renderTable() {
 
         tr.innerHTML = `
             <td>${formatDate(tx.date)}</td>
-            <td>${tx.where}</td>
-            <td><span class="type-badge ${typeBadgeClass}">${tx.type}</span></td>
-            <td style="font-weight: 600; color: ${tx.type === 'income' ? 'var(--success)' : (tx.type === 'zakat' ? 'var(--zakat)' : 'var(--danger)')};">
+            <td style="font-weight: 600; color: ${tx.type === 'income' ? 'var(--success)' : (tx.type === 'zakat' ? 'var(--zakat)' : 'var(--danger)')}">
                 ${amountSign}Rs. ${formatAmount(tx.amount)}
             </td>
+            <td><span class="type-badge ${typeBadgeClass}">${tx.type}</span></td>
+            <td>${tx.where}</td>
             <td>
                 <button class="btn-icon view-tx-btn" title="View details"><i class="fa-solid fa-circle-info"></i></button>
             </td>
@@ -788,7 +787,10 @@ if (btnExportData) {
         const url = URL.createObjectURL(blob);
         const link = document.createElement("a");
         link.setAttribute("href", url);
-        link.setAttribute("download", `expensepro_backup_${new Date().toISOString().split('T')[0]}.json`);
+        const now = new Date();
+        const datePart = now.toISOString().split('T')[0];
+        const timePart = now.toTimeString().split(' ')[0].replace(/:/g, '-');
+        link.setAttribute("download", `expensepro_backup_${datePart}_${timePart}.json`);
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
