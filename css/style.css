@@ -566,3 +566,71 @@ tr:hover td {
         padding: 0 10px 20px;
     }
 }
+
+/* ── Floating Toggle-Balances Button ── */
+.fab-toggle-balances {
+    position: fixed;
+    bottom: 32px;
+    right: 32px;
+    z-index: 500;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    color: #fff;
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    box-shadow: 0 4px 20px rgba(99, 102, 241, 0.5);
+    transition: transform 0.25s ease, box-shadow 0.25s ease, background 0.3s ease;
+    outline: none;
+}
+
+.fab-toggle-balances:hover {
+    transform: scale(1.12) translateY(-2px);
+    box-shadow: 0 8px 28px rgba(99, 102, 241, 0.7);
+}
+
+.fab-toggle-balances:active {
+    transform: scale(0.95);
+}
+
+/* Pulse ring that appears on click */
+.fab-toggle-balances::after {
+    content: '';
+    position: absolute;
+    inset: -4px;
+    border-radius: 50%;
+    border: 2px solid rgba(99, 102, 241, 0.6);
+    opacity: 0;
+    transform: scale(1);
+    transition: opacity 0.4s ease, transform 0.4s ease;
+    pointer-events: none;
+}
+
+.fab-toggle-balances.pulsed::after {
+    opacity: 1;
+    transform: scale(1.4);
+}
+
+/* Hidden state: eye-slash icon tint */
+.fab-toggle-balances.hidden-mode {
+    background: linear-gradient(135deg, #475569, #334155);
+    box-shadow: 0 4px 20px rgba(71, 85, 105, 0.5);
+}
+
+/* ── Balance value masking ── */
+.stat-info h2 {
+    transition: filter 0.35s ease, opacity 0.35s ease, letter-spacing 0.35s ease;
+}
+
+.balances-hidden .stat-info h2 {
+    filter: blur(8px);
+    opacity: 0.35;
+    letter-spacing: 4px;
+    user-select: none;
+}
+

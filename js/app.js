@@ -852,4 +852,33 @@ if (btnImportData && importFileInput) {
     });
 }
 
+// --- Toggle Balances Visibility ---
+const toggleBalancesBtn = document.getElementById('toggle-balances-btn');
+const toggleBalancesIcon = document.getElementById('toggle-balances-icon');
+const statsGrid = document.querySelector('.stats-grid');
+let balancesVisible = true;
+
+if (toggleBalancesBtn) {
+    toggleBalancesBtn.addEventListener('click', () => {
+        balancesVisible = !balancesVisible;
+
+        // Blur/unblur via class on the stats grid
+        if (balancesVisible) {
+            statsGrid.classList.remove('balances-hidden');
+            toggleBalancesIcon.classList.replace('fa-eye-slash', 'fa-eye');
+            toggleBalancesBtn.classList.remove('hidden-mode');
+        } else {
+            statsGrid.classList.add('balances-hidden');
+            toggleBalancesIcon.classList.replace('fa-eye', 'fa-eye-slash');
+            toggleBalancesBtn.classList.add('hidden-mode');
+        }
+
+        // Pulse ring animation
+        toggleBalancesBtn.classList.remove('pulsed');
+        void toggleBalancesBtn.offsetWidth; // reflow to restart animation
+        toggleBalancesBtn.classList.add('pulsed');
+        setTimeout(() => toggleBalancesBtn.classList.remove('pulsed'), 450);
+    });
+}
+
 init();
