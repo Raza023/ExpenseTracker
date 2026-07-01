@@ -624,13 +624,12 @@ tr:hover td {
 
 /* ── Balance value masking ── */
 .stat-info h2 {
-    transition: filter 0.35s ease, opacity 0.35s ease, letter-spacing 0.35s ease;
+    transition: filter 0.35s ease, opacity 0.35s ease;
 }
 
 .balances-hidden .stat-info h2 {
     filter: blur(8px);
     opacity: 0.35;
-    letter-spacing: 4px;
     user-select: none;
 }
 
