@@ -856,7 +856,7 @@ if (btnImportData && importFileInput) {
 const toggleBalancesBtn = document.getElementById('toggle-balances-btn');
 const toggleBalancesIcon = document.getElementById('toggle-balances-icon');
 const statsGrid = document.querySelector('.stats-grid');
-let balancesVisible = true;
+let balancesVisible = false;
 
 if (toggleBalancesBtn) {
     toggleBalancesBtn.addEventListener('click', () => {
