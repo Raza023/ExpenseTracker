@@ -261,6 +261,8 @@ txTabs.forEach(tab => {
             txWhereInput.placeholder = "Source of income (e.g. Salary)";
         } else if(type === 'zakat') {
             txWhereInput.placeholder = "Description (e.g. Donation to charity)";
+        } else if(type === 'credit') {
+            txWhereInput.placeholder = "Credit source (e.g. Refund, Cashback)";
         } else {
             txWhereInput.placeholder = "Where did you spend? (e.g. Groceries)";
         }
@@ -387,12 +389,14 @@ function updateDashboard() {
 
         // All Time totals (for current balance)
         if (tx.type === 'income') totalIncomeAllTime += tx.amount;
+        if (tx.type === 'credit') totalIncomeAllTime += tx.amount;
         if (tx.type === 'expense') totalExpenseAllTime += tx.amount;
         if (tx.type === 'zakat') totalZakatAllTime += tx.amount;
 
         // Transactions strictly BEFORE the selected month (for last month ending balance)
         if (filterVal !== 'all' && txMonthStr < filterVal) {
             if (tx.type === 'income') incomeBeforeFilter += tx.amount;
+            if (tx.type === 'credit') incomeBeforeFilter += tx.amount;
             if (tx.type === 'expense') expenseBeforeFilter += tx.amount;
             if (tx.type === 'zakat') zakatBeforeFilter += tx.amount;
         }
@@ -400,7 +404,9 @@ function updateDashboard() {
         // Selected month expenses
         if (filterVal !== 'all' && txMonthStr === filterVal) {
             if (tx.type === 'expense') monthlyExpenses += tx.amount;
+            if (tx.type === 'credit') monthlyExpenses -= tx.amount;
             if (tx.type === 'income') incomeThisMonth += tx.amount;
+            if (tx.type === 'credit') incomeThisMonth += tx.amount;
             if (tx.type === 'expense') expenseThisMonth += tx.amount;
             if (tx.type === 'zakat') zakatThisMonth += tx.amount;
         }
@@ -534,10 +540,11 @@ function renderTable() {
         let amountSign = '-';
         if (tx.type === 'income') { typeBadgeClass = 'type-income'; amountSign = '+'; }
         if (tx.type === 'zakat') { typeBadgeClass = 'type-zakat'; amountSign = '-'; }
+        if (tx.type === 'credit') { typeBadgeClass = 'type-credit'; amountSign = '+'; }
 
         tr.innerHTML = `
             <td>${formatDate(tx.date)}</td>
-            <td style="font-weight: 600; color: ${tx.type === 'income' ? 'var(--success)' : (tx.type === 'zakat' ? 'var(--zakat)' : 'var(--danger)')}">
+            <td style="font-weight: 600; color: ${(tx.type === 'income' || tx.type === 'credit') ? 'var(--success)' : (tx.type === 'zakat' ? 'var(--zakat)' : 'var(--danger)')}">
                 ${amountSign}Rs. ${formatAmount(tx.amount)}
             </td>
             <td><span class="type-badge ${typeBadgeClass}">${tx.type}</span></td>
@@ -720,6 +727,7 @@ if (btnDownloadPdf) {
             const tableData = filtered.map(tx => {
                 let amountSign = '-';
                 if (tx.type === 'income') amountSign = '+';
+                if (tx.type === 'credit') amountSign = '+';
                 if (tx.type === 'zakat') amountSign = '-';
                 return [
                     formatDate(tx.date),
@@ -751,6 +759,7 @@ if (btnDownloadPdf) {
                     if (data.section === 'body' && data.column.index === 2) {
                         const type = data.cell.raw;
                         if (type === 'Income') data.cell.styles.textColor = [39, 174, 96];
+                        if (type === 'Credit') data.cell.styles.textColor = [39, 174, 96];
                         if (type === 'Expense') data.cell.styles.textColor = [192, 57, 43];
                         if (type === 'Zakat') data.cell.styles.textColor = [142, 68, 173];
                         data.cell.styles.fontStyle = 'bold';
