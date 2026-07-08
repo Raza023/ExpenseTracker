@@ -49,6 +49,17 @@ const btnExportData = document.getElementById('btn-export-data');
 const btnImportData = document.getElementById('btn-import-data');
 const importFileInput = document.getElementById('import-file-input');
 
+// Advanced Filter Elements
+const btnToggleAdvFilters  = document.getElementById('btn-toggle-adv-filters');
+const advFiltersPanel      = document.getElementById('adv-filters-panel');
+const advFilterDateFrom    = document.getElementById('adv-filter-date-from');
+const advFilterDateTo      = document.getElementById('adv-filter-date-to');
+const advFilterAmountMin   = document.getElementById('adv-filter-amount-min');
+const advFilterAmountMax   = document.getElementById('adv-filter-amount-max');
+const advFilterDesc        = document.getElementById('adv-filter-desc');
+const advFilterCount       = document.getElementById('adv-filter-count');
+const typeChips            = document.querySelectorAll('.type-chip');
+
 // Modal Elements
 const salaryModal = document.getElementById('salary-modal');
 const editSalaryBtn = document.getElementById('edit-salary-btn');
@@ -81,6 +92,16 @@ let isLoginMode = true;
 let transactions = [];
 let monthlySalaries = {}; // { "YYYY-MM": amount }
 let dbListeners = [];
+
+// Advanced filter state
+const advFilters = {
+    dateFrom: '',
+    dateTo: '',
+    amountMin: '',
+    amountMax: '',
+    types: new Set(),   // empty = no type filter
+    desc: ''
+};
 
 // --- Utilities ---
 function formatDate(dateStr) {
@@ -520,16 +541,50 @@ txEditForm.addEventListener('submit', async (e) => {
 // --- Table Rendering ---
 function renderTable() {
     transactionsBody.innerHTML = '';
-    const filterVal = filterMonth.value; 
+    const filterVal = filterMonth.value;
 
-    const filtered = transactions.filter(tx => {
+    // 1) Month filter
+    let filtered = transactions.filter(tx => {
         if (filterVal === 'all') return true;
-        const txMonthStr = tx.date.substring(0, 7); 
-        return txMonthStr === filterVal;
+        return tx.date.substring(0, 7) === filterVal;
     });
+
+    // 2) Date-from filter
+    if (advFilters.dateFrom) {
+        filtered = filtered.filter(tx => tx.date >= advFilters.dateFrom);
+    }
+
+    // 3) Date-to filter
+    if (advFilters.dateTo) {
+        filtered = filtered.filter(tx => tx.date <= advFilters.dateTo);
+    }
+
+    // 4) Amount-min filter
+    if (advFilters.amountMin !== '') {
+        const min = parseFloat(advFilters.amountMin);
+        filtered = filtered.filter(tx => tx.amount >= min);
+    }
+
+    // 5) Amount-max filter
+    if (advFilters.amountMax !== '') {
+        const max = parseFloat(advFilters.amountMax);
+        filtered = filtered.filter(tx => tx.amount <= max);
+    }
+
+    // 6) Type filter (multi-select; empty set = all types)
+    if (advFilters.types.size > 0) {
+        filtered = filtered.filter(tx => advFilters.types.has(tx.type));
+    }
+
+    // 7) Description filter (partial, case-insensitive)
+    if (advFilters.desc) {
+        const needle = advFilters.desc.toLowerCase();
+        filtered = filtered.filter(tx => tx.where.toLowerCase().includes(needle));
+    }
 
     if (filtered.length === 0) {
         transactionsBody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--text-secondary);">No transactions found.</td></tr>`;
+        updateAdvFilterCount(0);
         return;
     }
 
@@ -557,6 +612,43 @@ function renderTable() {
         tr.querySelector('.view-tx-btn').addEventListener('click', () => openTxModal(tx));
         transactionsBody.appendChild(tr);
     });
+
+    updateAdvFilterCount(filtered.length);
+}
+
+/** Updates the results count in the filter footer and the badge on the toggle button */
+function updateAdvFilterCount(count) {
+    const activeCount = getActiveAdvFilterCount();
+    if (activeCount > 0) {
+        advFilterCount.textContent = `${count} result${count !== 1 ? 's' : ''} matching filters`;
+    } else {
+        advFilterCount.textContent = '';
+    }
+
+    // Badge on toggle button
+    let badge = btnToggleAdvFilters.querySelector('.filter-badge');
+    if (activeCount > 0) {
+        if (!badge) {
+            badge = document.createElement('span');
+            badge.className = 'filter-badge';
+            btnToggleAdvFilters.appendChild(badge);
+        }
+        badge.textContent = activeCount;
+        btnToggleAdvFilters.classList.add('filters-active');
+    } else {
+        if (badge) badge.remove();
+        btnToggleAdvFilters.classList.remove('filters-active');
+    }
+}
+
+/** Returns how many distinct advanced filters are currently active */
+function getActiveAdvFilterCount() {
+    let n = 0;
+    if (advFilters.dateFrom || advFilters.dateTo) n++;
+    if (advFilters.amountMin !== '' || advFilters.amountMax !== '') n++;
+    if (advFilters.types.size > 0) n++;
+    if (advFilters.desc) n++;
+    return n;
 }
 
 function updateMonthFilterOptions() {
@@ -597,6 +689,111 @@ function updateMonthFilterOptions() {
 
 filterMonth.addEventListener('change', () => {
     updateDashboard();
+    renderTable();
+});
+
+// --- Advanced Filters Logic ---
+if (btnToggleAdvFilters && advFiltersPanel) {
+    btnToggleAdvFilters.addEventListener('click', () => {
+        const isOpen = advFiltersPanel.style.display !== 'none';
+        advFiltersPanel.style.display = isOpen ? 'none' : 'block';
+    });
+}
+
+// Date inputs
+if (advFilterDateFrom) {
+    advFilterDateFrom.addEventListener('change', () => {
+        advFilters.dateFrom = advFilterDateFrom.value;
+        renderTable();
+    });
+}
+if (advFilterDateTo) {
+    advFilterDateTo.addEventListener('change', () => {
+        advFilters.dateTo = advFilterDateTo.value;
+        renderTable();
+    });
+}
+
+// Amount inputs
+if (advFilterAmountMin) {
+    advFilterAmountMin.addEventListener('input', () => {
+        advFilters.amountMin = advFilterAmountMin.value;
+        renderTable();
+    });
+}
+if (advFilterAmountMax) {
+    advFilterAmountMax.addEventListener('input', () => {
+        advFilters.amountMax = advFilterAmountMax.value;
+        renderTable();
+    });
+}
+
+// Type chips (toggle on/off; multiple allowed)
+typeChips.forEach(chip => {
+    chip.addEventListener('click', () => {
+        const t = chip.getAttribute('data-type');
+        if (advFilters.types.has(t)) {
+            advFilters.types.delete(t);
+            chip.classList.remove('active');
+        } else {
+            advFilters.types.add(t);
+            chip.classList.add('active');
+        }
+        renderTable();
+    });
+});
+
+// Description input
+if (advFilterDesc) {
+    advFilterDesc.addEventListener('input', () => {
+        advFilters.desc = advFilterDesc.value.trim();
+        renderTable();
+    });
+}
+
+// Individual clear buttons
+document.getElementById('clear-date-filter')?.addEventListener('click', () => {
+    advFilters.dateFrom = '';
+    advFilters.dateTo = '';
+    advFilterDateFrom.value = '';
+    advFilterDateTo.value = '';
+    renderTable();
+});
+
+document.getElementById('clear-amount-filter')?.addEventListener('click', () => {
+    advFilters.amountMin = '';
+    advFilters.amountMax = '';
+    advFilterAmountMin.value = '';
+    advFilterAmountMax.value = '';
+    renderTable();
+});
+
+document.getElementById('clear-type-filter')?.addEventListener('click', () => {
+    advFilters.types.clear();
+    typeChips.forEach(c => c.classList.remove('active'));
+    renderTable();
+});
+
+document.getElementById('clear-desc-filter')?.addEventListener('click', () => {
+    advFilters.desc = '';
+    advFilterDesc.value = '';
+    renderTable();
+});
+
+// Clear all filters
+document.getElementById('btn-clear-all-filters')?.addEventListener('click', () => {
+    advFilters.dateFrom = '';
+    advFilters.dateTo = '';
+    advFilters.amountMin = '';
+    advFilters.amountMax = '';
+    advFilters.types.clear();
+    advFilters.desc = '';
+    if (advFilterDateFrom)  advFilterDateFrom.value  = '';
+    if (advFilterDateTo)    advFilterDateTo.value    = '';
+    if (advFilterAmountMin) advFilterAmountMin.value = '';
+    if (advFilterAmountMax) advFilterAmountMax.value = '';
+    if (advFilterDesc)      advFilterDesc.value      = '';
+    typeChips.forEach(c => c.classList.remove('active'));
     renderTable();
 });
 

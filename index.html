@@ -142,6 +142,9 @@
                                     <option value="all">All Time</option>
                                     <!-- Options populated by JS -->
                                 </select>
+                                <button id="btn-toggle-adv-filters" class="btn btn-outline" title="Toggle Column Filters">
+                                    <i class="fa-solid fa-filter"></i>
+                                </button>
                                 <button id="btn-download-csv" class="btn btn-outline" title="Download CSV">
                                     <i class="fa-solid fa-file-csv"></i>
                                 </button>
@@ -158,6 +161,79 @@
                                     </button>
                                 </div>
                                 <input type="file" id="import-file-input" accept=".json" style="display: none;">
+                            </div>
+                        </div>
+
+                        <!-- Advanced Column Filters Panel -->
+                        <div id="adv-filters-panel" class="adv-filters-panel" style="display:none;">
+                            <div class="adv-filters-grid">
+                                <!-- Date Filter -->
+                                <div class="adv-filter-group">
+                                    <div class="adv-filter-label">
+                                        <i class="fa-solid fa-calendar-days"></i>
+                                        <span>Date</span>
+                                    </div>
+                                    <div class="adv-filter-inputs">
+                                        <div class="date-filter-row">
+                                            <input type="date" id="adv-filter-date-from" class="glass-input adv-input" placeholder="From">
+                                            <span class="date-sep">–</span>
+                                            <input type="date" id="adv-filter-date-to" class="glass-input adv-input" placeholder="To">
+                                        </div>
+                                    </div>
+                                    <button class="adv-clear-btn" id="clear-date-filter" title="Clear date filter"><i class="fa-solid fa-xmark"></i></button>
+                                </div>
+
+                                <!-- Amount Filter -->
+                                <div class="adv-filter-group">
+                                    <div class="adv-filter-label">
+                                        <i class="fa-solid fa-rupee-sign"></i>
+                                        <span>Amount</span>
+                                    </div>
+                                    <div class="adv-filter-inputs">
+                                        <div class="date-filter-row">
+                                            <input type="number" id="adv-filter-amount-min" class="glass-input adv-input" placeholder="Min" min="0" step="0.01">
+                                            <span class="date-sep">–</span>
+                                            <input type="number" id="adv-filter-amount-max" class="glass-input adv-input" placeholder="Max" min="0" step="0.01">
+                                        </div>
+                                    </div>
+                                    <button class="adv-clear-btn" id="clear-amount-filter" title="Clear amount filter"><i class="fa-solid fa-xmark"></i></button>
+                                </div>
+
+                                <!-- Type Filter -->
+                                <div class="adv-filter-group adv-filter-group--full">
+                                    <div class="adv-filter-label">
+                                        <i class="fa-solid fa-layer-group"></i>
+                                        <span>Type</span>
+                                    </div>
+                                    <div class="adv-filter-inputs">
+                                        <div class="type-chips">
+                                            <button class="type-chip" data-type="expense">Expense</button>
+                                            <button class="type-chip" data-type="zakat">Zakat</button>
+                                            <button class="type-chip" data-type="income">Income</button>
+                                            <button class="type-chip" data-type="credit">Credit</button>
+                                        </div>
+                                    </div>
+                                    <button class="adv-clear-btn" id="clear-type-filter" title="Clear type filter"><i class="fa-solid fa-xmark"></i></button>
+                                </div>
+
+                                <!-- Description Filter -->
+                                <div class="adv-filter-group adv-filter-group--full">
+                                    <div class="adv-filter-label">
+                                        <i class="fa-solid fa-magnifying-glass"></i>
+                                        <span>Description</span>
+                                    </div>
+                                    <div class="adv-filter-inputs">
+                                        <input type="text" id="adv-filter-desc" class="glass-input adv-input adv-input--wide" placeholder="Search description (case-insensitive)">
+                                    </div>
+                                    <button class="adv-clear-btn" id="clear-desc-filter" title="Clear description filter"><i class="fa-solid fa-xmark"></i></button>
+                                </div>
+                            </div>
+
+                            <div class="adv-filters-footer">
+                                <span id="adv-filter-count" class="adv-filter-count"></span>
+                                <button id="btn-clear-all-filters" class="btn btn-outline adv-clear-all-btn">
+                                    <i class="fa-solid fa-filter-circle-xmark"></i> Clear All Filters
+                                </button>
                             </div>
                         </div>
                         <div class="table-responsive">
