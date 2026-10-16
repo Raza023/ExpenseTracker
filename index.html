@@ -5,10 +5,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ExpensePro - Intelligent Finance Tracker</title>
-    
+
     <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" href="favicon.svg">
-    
+
     <link rel="stylesheet" href="css/style.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <!-- FontAwesome -->
@@ -142,7 +142,8 @@
                                     <option value="all">All Time</option>
                                     <!-- Options populated by JS -->
                                 </select>
-                                <button id="btn-toggle-adv-filters" class="btn btn-outline" title="Toggle Column Filters">
+                                <button id="btn-toggle-adv-filters" class="btn btn-outline"
+                                    title="Toggle Column Filters">
                                     <i class="fa-solid fa-filter"></i>
                                 </button>
                                 <button id="btn-download-csv" class="btn btn-outline" title="Download CSV">
@@ -175,12 +176,15 @@
                                     </div>
                                     <div class="adv-filter-inputs">
                                         <div class="date-filter-row">
-                                            <input type="date" id="adv-filter-date-from" class="glass-input adv-input" placeholder="From">
+                                            <input type="date" id="adv-filter-date-from" class="glass-input adv-input"
+                                                placeholder="From">
                                             <span class="date-sep">–</span>
-                                            <input type="date" id="adv-filter-date-to" class="glass-input adv-input" placeholder="To">
+                                            <input type="date" id="adv-filter-date-to" class="glass-input adv-input"
+                                                placeholder="To">
                                         </div>
                                     </div>
-                                    <button class="adv-clear-btn" id="clear-date-filter" title="Clear date filter"><i class="fa-solid fa-xmark"></i></button>
+                                    <button class="adv-clear-btn" id="clear-date-filter" title="Clear date filter"><i
+                                            class="fa-solid fa-xmark"></i></button>
                                 </div>
 
                                 <!-- Amount Filter -->
@@ -191,12 +195,15 @@
                                     </div>
                                     <div class="adv-filter-inputs">
                                         <div class="date-filter-row">
-                                            <input type="number" id="adv-filter-amount-min" class="glass-input adv-input" placeholder="Min" min="0" step="0.01">
+                                            <input type="number" id="adv-filter-amount-min"
+                                                class="glass-input adv-input" placeholder="Min" min="0" step="0.01">
                                             <span class="date-sep">–</span>
-                                            <input type="number" id="adv-filter-amount-max" class="glass-input adv-input" placeholder="Max" min="0" step="0.01">
+                                            <input type="number" id="adv-filter-amount-max"
+                                                class="glass-input adv-input" placeholder="Max" min="0" step="0.01">
                                         </div>
                                     </div>
-                                    <button class="adv-clear-btn" id="clear-amount-filter" title="Clear amount filter"><i class="fa-solid fa-xmark"></i></button>
+                                    <button class="adv-clear-btn" id="clear-amount-filter"
+                                        title="Clear amount filter"><i class="fa-solid fa-xmark"></i></button>
                                 </div>
 
                                 <!-- Type Filter -->
@@ -213,7 +220,8 @@
                                             <button class="type-chip" data-type="credit">Credit</button>
                                         </div>
                                     </div>
-                                    <button class="adv-clear-btn" id="clear-type-filter" title="Clear type filter"><i class="fa-solid fa-xmark"></i></button>
+                                    <button class="adv-clear-btn" id="clear-type-filter" title="Clear type filter"><i
+                                            class="fa-solid fa-xmark"></i></button>
                                 </div>
 
                                 <!-- Description Filter -->
@@ -223,9 +231,12 @@
                                         <span>Description</span>
                                     </div>
                                     <div class="adv-filter-inputs">
-                                        <input type="text" id="adv-filter-desc" class="glass-input adv-input adv-input--wide" placeholder="Search description (case-insensitive)">
+                                        <input type="text" id="adv-filter-desc"
+                                            class="glass-input adv-input adv-input--wide"
+                                            placeholder="Search description (case-insensitive)">
                                     </div>
-                                    <button class="adv-clear-btn" id="clear-desc-filter" title="Clear description filter"><i class="fa-solid fa-xmark"></i></button>
+                                    <button class="adv-clear-btn" id="clear-desc-filter"
+                                        title="Clear description filter"><i class="fa-solid fa-xmark"></i></button>
                                 </div>
                             </div>
 
@@ -252,6 +263,10 @@
                                 </tbody>
                             </table>
                         </div>
+                        <nav id="transactions-pagination" class="pagination" aria-label="Transaction pages" hidden>
+                            <span id="pagination-summary" class="pagination-summary" aria-live="polite"></span>
+                            <div id="pagination-controls" class="pagination-controls"></div>
+                        </nav>
                     </div>
                 </div>
             </main>

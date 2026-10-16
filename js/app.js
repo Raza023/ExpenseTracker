@@ -1,10 +1,10 @@
 import { db } from './firebase-config.js';
-import { 
-    ref, 
-    set, 
-    push, 
-    onValue, 
-    query, 
+import {
+    ref,
+    set,
+    push,
+    onValue,
+    query,
     orderByChild,
     get,
     child,
@@ -50,15 +50,15 @@ const btnImportData = document.getElementById('btn-import-data');
 const importFileInput = document.getElementById('import-file-input');
 
 // Advanced Filter Elements
-const btnToggleAdvFilters  = document.getElementById('btn-toggle-adv-filters');
-const advFiltersPanel      = document.getElementById('adv-filters-panel');
-const advFilterDateFrom    = document.getElementById('adv-filter-date-from');
-const advFilterDateTo      = document.getElementById('adv-filter-date-to');
-const advFilterAmountMin   = document.getElementById('adv-filter-amount-min');
-const advFilterAmountMax   = document.getElementById('adv-filter-amount-max');
-const advFilterDesc        = document.getElementById('adv-filter-desc');
-const advFilterCount       = document.getElementById('adv-filter-count');
-const typeChips            = document.querySelectorAll('.type-chip');
+const btnToggleAdvFilters = document.getElementById('btn-toggle-adv-filters');
+const advFiltersPanel = document.getElementById('adv-filters-panel');
+const advFilterDateFrom = document.getElementById('adv-filter-date-from');
+const advFilterDateTo = document.getElementById('adv-filter-date-to');
+const advFilterAmountMin = document.getElementById('adv-filter-amount-min');
+const advFilterAmountMax = document.getElementById('adv-filter-amount-max');
+const advFilterDesc = document.getElementById('adv-filter-desc');
+const advFilterCount = document.getElementById('adv-filter-count');
+const typeChips = document.querySelectorAll('.type-chip');
 
 // Modal Elements
 const salaryModal = document.getElementById('salary-modal');
@@ -92,6 +92,13 @@ let isLoginMode = true;
 let transactions = [];
 let monthlySalaries = {}; // { "YYYY-MM": amount }
 let dbListeners = [];
+const PAGE_SIZE = 20;
+let currentPage = 1;
+let lastTableFilterKey = '';
+
+const pagination = document.getElementById('transactions-pagination');
+const paginationSummary = document.getElementById('pagination-summary');
+const paginationControls = document.getElementById('pagination-controls');
 
 // Advanced filter state
 const advFilters = {
@@ -145,11 +152,11 @@ function init() {
             })
         ],
         altInput: true,
-        onChange: function(selectedDates, dateStr) {
+        onChange: function (selectedDates, dateStr) {
             salaryInput.value = monthlySalaries[dateStr] || '';
         }
     });
-    
+
     // Check if user is saved in session storage
     const savedUser = sessionStorage.getItem('expenseProUser');
     if (savedUser) {
@@ -203,8 +210,8 @@ authForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     const email = authEmail.value.trim().toLowerCase();
     const password = authPassword.value;
-    
-    if(!email || !password) {
+
+    if (!email || !password) {
         showError("Please enter email and password");
         return;
     }
@@ -213,7 +220,7 @@ authForm.addEventListener('submit', async (e) => {
     // This acts as both the "authentication" and the "database path"
     const secretKey = await hashPassword(email + ":" + password);
     const dbRef = ref(db);
-    
+
     try {
         if (isLoginMode) {
             // LOGIN
@@ -274,15 +281,15 @@ txTabs.forEach(tab => {
     tab.addEventListener('click', () => {
         txTabs.forEach(t => t.classList.remove('active'));
         tab.classList.add('active');
-        
+
         const type = tab.getAttribute('data-type');
         txTypeInput.value = type;
-        
-        if(type === 'income') {
+
+        if (type === 'income') {
             txWhereInput.placeholder = "Source of income (e.g. Salary)";
-        } else if(type === 'zakat') {
+        } else if (type === 'zakat') {
             txWhereInput.placeholder = "Description (e.g. Donation to charity)";
-        } else if(type === 'credit') {
+        } else if (type === 'credit') {
             txWhereInput.placeholder = "Credit source (e.g. Refund, Cashback)";
         } else {
             txWhereInput.placeholder = "Where did you spend? (e.g. Groceries)";
@@ -318,16 +325,16 @@ transactionForm.addEventListener('submit', async (e) => {
 editSalaryBtn.addEventListener('click', () => {
     const filterVal = filterMonth.value;
     let targetMonth;
-    
+
     if (filterVal !== 'all') {
         targetMonth = filterVal;
     } else {
         const now = new Date();
         targetMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
     }
-    
+
     document.querySelector("#salary-month-input")._flatpickr.setDate(targetMonth, true); // true triggers onChange
-    
+
     salaryModal.classList.add('active');
 });
 
@@ -479,7 +486,7 @@ function openTxModal(tx) {
     txViewDate.innerText = formatDate(tx.date);
     txViewType.innerText = tx.type.charAt(0).toUpperCase() + tx.type.slice(1);
     txViewWhere.innerText = tx.where;
-    
+
     // Populate Edit Mode Form
     editTxId.value = tx.id;
     editTxType.value = tx.type;
@@ -509,11 +516,11 @@ btnCancelEditTx.addEventListener('click', () => {
 
 btnDeleteTx.addEventListener('click', async () => {
     const txId = editTxId.value;
-    if(!txId || !currentUser) return;
+    if (!txId || !currentUser) return;
     try {
         await remove(ref(db, `users/${currentUser.uid}/transactions/${txId}`));
         txModal.classList.remove('active');
-    } catch(err) {
+    } catch (err) {
         alert("Failed to delete: " + err.message);
     }
 });
@@ -521,7 +528,7 @@ btnDeleteTx.addEventListener('click', async () => {
 txEditForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     const txId = editTxId.value;
-    if(!txId || !currentUser) return;
+    if (!txId || !currentUser) return;
 
     const txData = {
         type: editTxType.value,
@@ -533,7 +540,7 @@ txEditForm.addEventListener('submit', async (e) => {
     try {
         await update(ref(db, `users/${currentUser.uid}/transactions/${txId}`), txData);
         txModal.classList.remove('active');
-    } catch(err) {
+    } catch (err) {
         alert("Failed to update: " + err.message);
     }
 });
@@ -542,6 +549,19 @@ txEditForm.addEventListener('submit', async (e) => {
 function renderTable() {
     transactionsBody.innerHTML = '';
     const filterVal = filterMonth.value;
+    const filterKey = JSON.stringify({
+        month: filterVal,
+        dateFrom: advFilters.dateFrom,
+        dateTo: advFilters.dateTo,
+        amountMin: advFilters.amountMin,
+        amountMax: advFilters.amountMax,
+        types: Array.from(advFilters.types).sort(),
+        desc: advFilters.desc
+    });
+    if (filterKey !== lastTableFilterKey) {
+        currentPage = 1;
+        lastTableFilterKey = filterKey;
+    }
 
     // 1) Month filter
     let filtered = transactions.filter(tx => {
@@ -584,13 +604,20 @@ function renderTable() {
 
     if (filtered.length === 0) {
         transactionsBody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--text-secondary);">No transactions found.</td></tr>`;
+        pagination.hidden = true;
+        paginationControls.innerHTML = '';
         updateAdvFilterCount(0);
         return;
     }
 
-    filtered.forEach(tx => {
+    const pageCount = Math.ceil(filtered.length / PAGE_SIZE);
+    currentPage = Math.min(currentPage, pageCount);
+    const pageStart = (currentPage - 1) * PAGE_SIZE;
+    const pageTransactions = filtered.slice(pageStart, pageStart + PAGE_SIZE);
+
+    pageTransactions.forEach(tx => {
         const tr = document.createElement('tr');
-        
+
         let typeBadgeClass = 'type-expense';
         let amountSign = '-';
         if (tx.type === 'income') { typeBadgeClass = 'type-income'; amountSign = '+'; }
@@ -608,13 +635,69 @@ function renderTable() {
                 <button class="btn-icon view-tx-btn" title="View details"><i class="fa-solid fa-circle-info"></i></button>
             </td>
         `;
-        
+
         tr.querySelector('.view-tx-btn').addEventListener('click', () => openTxModal(tx));
         transactionsBody.appendChild(tr);
     });
 
+    renderPagination(filtered.length, pageCount);
     updateAdvFilterCount(filtered.length);
 }
+
+function renderPagination(total, pageCount) {
+    pagination.hidden = pageCount <= 1;
+    if (pageCount <= 1) {
+        paginationControls.innerHTML = '';
+        return;
+    }
+
+    const firstItem = (currentPage - 1) * PAGE_SIZE + 1;
+    const lastItem = Math.min(currentPage * PAGE_SIZE, total);
+    paginationSummary.textContent = `Showing ${firstItem}-${lastItem} of ${total}`;
+
+    const pages = new Set([1, pageCount]);
+    for (let page = Math.max(1, currentPage - 2); page <= Math.min(pageCount, currentPage + 2); page++) {
+        pages.add(page);
+    }
+    const visiblePages = Array.from(pages).sort((a, b) => a - b);
+    const items = [];
+    let previousPage = 0;
+
+    const addButton = (label, page, { disabled = false, active = false, ariaLabel = '' } = {}) => {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = `pagination-button${active ? ' active' : ''}`;
+        button.textContent = label;
+        button.disabled = disabled;
+        if (ariaLabel) button.setAttribute('aria-label', ariaLabel);
+        if (active) button.setAttribute('aria-current', 'page');
+        if (page !== null) button.dataset.page = page;
+        items.push(button);
+    };
+
+    addButton('Previous', currentPage - 1, { disabled: currentPage === 1, ariaLabel: 'Previous page' });
+    visiblePages.forEach(page => {
+        if (page - previousPage > 1) {
+            const ellipsis = document.createElement('span');
+            ellipsis.className = 'pagination-ellipsis';
+            ellipsis.textContent = '...';
+            ellipsis.setAttribute('aria-hidden', 'true');
+            items.push(ellipsis);
+        }
+        addButton(String(page), page, { active: page === currentPage, ariaLabel: `Page ${page}` });
+        previousPage = page;
+    });
+    addButton('Next', currentPage + 1, { disabled: currentPage === pageCount, ariaLabel: 'Next page' });
+
+    paginationControls.replaceChildren(...items);
+}
+
+paginationControls.addEventListener('click', (event) => {
+    const button = event.target.closest('button[data-page]');
+    if (!button || button.disabled) return;
+    currentPage = Number(button.dataset.page);
+    renderTable();
+});
 
 /** Updates the results count in the filter footer and the badge on the toggle button */
 function updateAdvFilterCount(count) {
@@ -653,11 +736,11 @@ function getActiveAdvFilterCount() {
 
 function updateMonthFilterOptions() {
     const currentSelection = filterMonth.value;
-    
+
     // Extract unique YYYY-MM values from existing transactions
     const uniqueMonths = new Set();
     transactions.forEach(tx => {
-        if(tx.date) {
+        if (tx.date) {
             uniqueMonths.add(tx.date.substring(0, 7));
         }
     });
@@ -667,12 +750,12 @@ function updateMonthFilterOptions() {
 
     // Rebuild options
     filterMonth.innerHTML = '<option value="all">All Time</option>';
-    
+
     sortedMonths.forEach(yyyy_mm => {
         const [yyyy, mm] = yyyy_mm.split('-');
         const dateObj = new Date(parseInt(yyyy), parseInt(mm) - 1, 1);
         const monthName = dateObj.toLocaleString('default', { month: 'long', year: 'numeric' });
-        
+
         const option = document.createElement('option');
         option.value = yyyy_mm;
         option.innerText = monthName;
@@ -788,22 +871,22 @@ document.getElementById('btn-clear-all-filters')?.addEventListener('click', () =
     advFilters.amountMax = '';
     advFilters.types.clear();
     advFilters.desc = '';
-    if (advFilterDateFrom)  advFilterDateFrom.value  = '';
-    if (advFilterDateTo)    advFilterDateTo.value    = '';
+    if (advFilterDateFrom) advFilterDateFrom.value = '';
+    if (advFilterDateTo) advFilterDateTo.value = '';
     if (advFilterAmountMin) advFilterAmountMin.value = '';
     if (advFilterAmountMax) advFilterAmountMax.value = '';
-    if (advFilterDesc)      advFilterDesc.value      = '';
+    if (advFilterDesc) advFilterDesc.value = '';
     typeChips.forEach(c => c.classList.remove('active'));
     renderTable();
 });
 
 if (btnDownloadCsv) {
     btnDownloadCsv.addEventListener('click', () => {
-        const filterVal = filterMonth.value; 
+        const filterVal = filterMonth.value;
 
         const filtered = transactions.filter(tx => {
             if (filterVal === 'all') return true;
-            const txMonthStr = tx.date.substring(0, 7); 
+            const txMonthStr = tx.date.substring(0, 7);
             return txMonthStr === filterVal;
         });
 
@@ -830,7 +913,7 @@ if (btnDownloadCsv) {
         csvContent += `----------------------------------------------------\n`;
         csvContent += `[ TRANSACTIONS LOG ]\n`;
         csvContent += "Date,Description,Type,Amount\n";
-        
+
         filtered.forEach(tx => {
             let desc = tx.where.replace(/"/g, '""');
             if (desc.includes(',') || desc.includes('\\n') || desc.includes('"')) {
@@ -853,11 +936,11 @@ if (btnDownloadCsv) {
 
 if (btnDownloadPdf) {
     btnDownloadPdf.addEventListener('click', () => {
-        const filterVal = filterMonth.value; 
+        const filterVal = filterMonth.value;
 
         const filtered = transactions.filter(tx => {
             if (filterVal === 'all') return true;
-            const txMonthStr = tx.date.substring(0, 7); 
+            const txMonthStr = tx.date.substring(0, 7);
             return txMonthStr === filterVal;
         });
 
@@ -869,16 +952,16 @@ if (btnDownloadPdf) {
 
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF();
-        
+
         // Header Banner
         doc.setFillColor(41, 128, 185); // Professional Blue
         doc.rect(0, 0, 210, 40, 'F');
-        
+
         doc.setTextColor(255, 255, 255);
         doc.setFontSize(24);
         doc.setFont("helvetica", "bold");
         doc.text("ExpensePro", 14, 25);
-        
+
         doc.setFontSize(12);
         doc.setFont("helvetica", "normal");
         const reportDate = new Date().toLocaleDateString();
@@ -889,7 +972,7 @@ if (btnDownloadPdf) {
         doc.setFontSize(14);
         doc.setFont("helvetica", "bold");
         doc.text("Financial Summary", 14, 52);
-        
+
         // Summary Cards
         const drawCard = (x, y, title, value, color) => {
             doc.setDrawColor(220, 220, 220);
@@ -907,7 +990,7 @@ if (btnDownloadPdf) {
 
         drawCard(14, 58, "Current Balance", currentBalance, [41, 128, 185]); // Blue
         drawCard(110, 58, "Monthly Salary", monthlySalary, [39, 174, 96]); // Green
-        
+
         drawCard(14, 84, "Monthly Expenses", monthlyExpenses, [192, 57, 43]); // Red
         drawCard(110, 84, "This Month Ending", thisMonthBalance, [142, 68, 173]); // Purple
 
@@ -941,7 +1024,7 @@ if (btnDownloadPdf) {
                 theme: 'grid',
                 headStyles: { fillColor: [41, 128, 185], textColor: 255, fontStyle: 'bold' },
                 alternateRowStyles: { fillColor: [245, 247, 250] },
-                didParseCell: function(data) {
+                didParseCell: function (data) {
                     if (data.section === 'body' && data.column.index === 3) {
                         const val = data.cell.raw;
                         if (val.startsWith('+')) {
@@ -1017,7 +1100,7 @@ if (btnImportData && importFileInput) {
             try {
                 const importedData = JSON.parse(event.target.result);
                 const updates = {};
-                
+
                 if (importedData.transactions && Array.isArray(importedData.transactions)) {
                     importedData.transactions.forEach(tx => {
                         const { id, ...txData } = tx;
@@ -1026,7 +1109,7 @@ if (btnImportData && importFileInput) {
                         updates[`users/${currentUser.uid}/transactions/${key}`] = txData;
                     });
                 }
-                
+
                 if (importedData.salaries && typeof importedData.salaries === 'object') {
                     Object.keys(importedData.salaries).forEach(month => {
                         updates[`users/${currentUser.uid}/salaries/${month}`] = importedData.salaries[month];
@@ -1039,7 +1122,7 @@ if (btnImportData && importFileInput) {
                 } else {
                     alert("No valid data found in the file.");
                 }
-                
+
             } catch (err) {
                 alert("Error parsing or importing file: " + err.message);
             }
